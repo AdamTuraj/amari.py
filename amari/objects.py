@@ -1,18 +1,16 @@
+__all__ = ("User", "Leaderboard", "Rewards")
+
 class User:
-    __slots__ = ("id", "name", "exp", "level", "weeklyexp")
+    __slots__ = ("guild_id", "user_id", "name", "exp", "level", "weeklyexp")
 
-    def __init__(self, data):
-        self.set_data(data)
+    def __init__(self, guild_id: int, data: dict):
+        self.guild_id: int = guild_id
+        self.user_id: int = int(data["id"])
+        self.name: str = data["username"]
+        self.exp: int = int(data["exp"])
+        self.level: int = int(data["level"])
+        self.weeklyexp: int = int(data["weeklyExp"])
 
-    def __str__(self) -> str:
-        return self.name
-
-    def set_data(self, data):
-        self.id = int(data["id"])
-        self.name = data["username"]
-        self.exp = int(data["exp"])
-        self.level = int(data["level"])
-        self.weeklyexp = int(data["weeklyExp"])
 
 
 class Leaderboard:
