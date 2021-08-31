@@ -1,0 +1,3 @@
+recursive-include amari *.py
+include README.md
+include LICENSE
