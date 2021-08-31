@@ -3,6 +3,7 @@ from typing import Dict
 
 import asyncio
 import aiohttp
+import requests
 
 from datetime import datetime
 
@@ -37,10 +38,14 @@ class AmariBot:
 
         self.default_headers = {"Authorization": token}
 
+        response = requests.get(self.baseurl, headers=self.default_headers)
+        if response.json().get("error") == "Unauthorized":
+            raise InvalidToken
+
         # Anti Ratelimit section
         self.requests = []
 
-        self.max_requests = 30
+        self.max_requests = 60
         # Value in seconds
         self.request_period = 60
 
