@@ -12,21 +12,19 @@ class User:
         self.weeklyexp: int = int(data["weeklyExp"])
 
 
-
 class Leaderboard:
-    __slots__ = ("id", "usercount", "leaderboard")
+    __slots__ = ("guild_id", "total_count", "leaderboard")
 
-    def __init__(self, data):
-        self.set_data(data)
+    def __init__(self, guild_id: int, data: dict):
+        self.guild_id: int = guild_id
+        self.total_count: int = int(data["total_count"])
+        self.leaderboard = data["data"] # TODO parse into dict of partial users with cached property
 
-    def __str__(self) -> str:
-        return str(self.id)
+    def __repr__(self) -> str:
+        return f"<Leaderboard guild_id={self.guild_id} total_count={self.total_count}>"
 
-    def set_data(self, data):
-        self.id = int(data["id"])
-        self.usercount = int(data["total_count"])
-        self.leaderboard = data["data"]
-
+    def __len__(self) -> int:
+        return self.total_count
 
 class Rewards:
     __slots__ = ("id", "count", "roles")

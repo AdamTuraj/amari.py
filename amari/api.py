@@ -64,7 +64,7 @@ class AmariClient:
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
-        return User(data)
+        return User(guild_id, data)
 
     async def fetch_leaderboard(
         self, guild_id: int, *, weekly: bool = False, page: int = 1, limit: int = 50
@@ -72,8 +72,7 @@ class AmariClient:
         params = {"page": page, "limit": limit}
         lb_type = "weekly" if weekly else "leaderboard"
         data = await self.request(f"guild/{lb_type}/{guild_id}", params=params)
-        data["id"] = guild_id
-        return Leaderboard(data)
+        return Leaderboard(guild_id, data)
 
     async def fetch_rewards(
         self, guild_id: int, *, page: int = 1, limit: int = 50
