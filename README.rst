@@ -32,12 +32,12 @@ Key features
 Support
 -------
 
-If you have any questions or require support with the API wrapper, visit the `AmariBot Support Server <https://discord.gg/RKPASf6>`_ and ping `TheF1ng3r#0002 <https://discord.com/users/374147012599218176/>`_ in any support channel.
+If you have any questions or require support with the API wrapper, visit the `AmariBot Support Server <https://discord.gg/qKkSUSwU2G>`_ and ask in channel it brings you to.
 
 Bugs
 ----
 
-If you find any bugs with the library, you can report it by creating an issue at the `APIs Github repo <https://github.com/TheF1ng3r/amari.py>`_.
+If you find any bugs with the library, you can report it by creating a bug issue at `Amari.py's Github repo <https://github.com/TheF1ng3r/amari.py>`_.
 
 Docs
 ----
