@@ -6,24 +6,23 @@ import aiohttp
 
 from datetime import datetime
 
-from .exceptions import NotFound, InvalidToken, Ratelimited, AmariServerError
-
+from .exceptions import HTTPException, NotFound, InvalidToken, Ratelimited, AmariServerError
 from .objects import User, Leaderboard, Rewards
 
 __all__ = ("AmariClient",)
 
 logger = logging.getLogger(__name__)
 
-HTTP_response_errors = {
-    404: NotFound,
-    403: InvalidToken,
-    429: Ratelimited,
-    500: AmariServerError,
-}
-
 
 class AmariClient:
     BASE_URL = "https://amaribot.com/api/v1/"
+
+    HTTP_response_errors = {
+        404: NotFound,
+        403: InvalidToken,
+        429: Ratelimited,
+        500: AmariServerError,
+    }
 
     def __init__(self, token: str, *, session: Optional[aiohttp.ClientSession] = None):
         self.session = session or aiohttp.ClientSession()
@@ -76,7 +75,7 @@ class AmariClient:
         data["id"] = guild_id
         return Leaderboard(data)
 
-    async def get_rewards(
+    async def fetch_rewards(
         self, guild_id: int, *, page: int = 1, limit: int = 50
     ) -> Rewards:
         params = {"page": page, "limit": limit}
@@ -84,10 +83,15 @@ class AmariClient:
         data["id"] = guild_id
         return Rewards(data)
 
-    @staticmethod
-    def check_response_for_errors(resp_status: int):
-        if resp_status in HTTP_response_errors:
-            raise HTTP_response_errors[resp_status]
+    @classmethod
+    async def check_response_for_errors(cls, response: aiohttp.ClientResponse):
+        if response.status > 399 or response.status < 200:
+            error = cls.HTTP_response_errors.get(response.status, HTTPException)
+            try:
+                message = (await response.json())["error"] # clean this up later
+            except Exception:
+                message = await response.text()
+            raise error(response, message)
 
     async def request(self, endpoint: str, *, params: Dict = {}) -> Dict:
         await self.check_and_update_ratelimit()
@@ -96,8 +100,6 @@ class AmariClient:
             headers=self.default_headers,
             params=params,
         ) as response:
-
-            check_response_for_errors(response.status)
-
+            self.check_response_for_errors(response)
             self.requests.append(datetime.utcnow())
             return await response.json()
