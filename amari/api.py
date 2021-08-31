@@ -3,6 +3,7 @@ from typing import Dict
 
 import asyncio
 import aiohttp
+import requests
 
 from datetime import datetime
 
@@ -34,6 +35,10 @@ class AmariBot:
             raise TypeError("The token must be a string.")
 
         self.baseurl = BASE_URL
+        
+        response = requests.get(self.url, headers={"Authorization": self.auth_key})
+        if response.json().get("error") and response.json().get("error").lower() == "unauthorized":
+            raise RuntimeError("Given token for the AmariAPI was invalid. Please head over to your Amari developer dashboard and get a proper authorization token.")
 
         self.default_headers = {"Authorization": token}
 
