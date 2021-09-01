@@ -3,6 +3,7 @@ import asyncio
 # Importing the package
 from amari import AmariBot
 
+
 # Creating the function to get the rewards
 async def get_amari_rewards(guild_id):
     # Initialize the package and

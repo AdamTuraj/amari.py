@@ -10,11 +10,7 @@ class _SlotsReprMixin:
 
     def __repr__(self) -> str:
         inner = ", ".join(
-            (
-                f"{k}={v!r}"
-                for k, v in self.get_slotted_items()
-                if v and not k.startswith("_")
-            )
+            (f"{k}={v!r}" for k, v in self.get_slotted_items() if v and not k.startswith("_"))
         )
         return f"{self.__class__.__name__}({inner})"
 
@@ -47,9 +43,7 @@ class User(_SlotsReprMixin):
         self.user_id: int = int(data["id"])
         self.name: str = data["username"]
         self.exp: int = int(data["exp"])
-        self.level: Optional[int] = (
-            int(data.get("level")) if data.get("level") else None
-        )
+        self.level: Optional[int] = int(data.get("level")) if data.get("level") else None
         self.weeklyexp: Optional[int] = (
             int(data.get("weeklyExp")) if data.get("weeklyExp") else None
         )

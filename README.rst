@@ -4,11 +4,11 @@ Amari.py
 .. image:: https://img.shields.io/pypi/v/amari.py.svg
    :target: https://pypi.org/project/amari.py/
    :alt: PyPi Library version
-   
+
 .. image:: https://img.shields.io/pypi/pyversions/amari.py.svg
    :target: https://pypi.org/project/amari.py/
    :alt: PyPi library Python versions
-   
+
 Amari.py is an async, easy to use API wrapper for the AmariBot.
 
 Installation
