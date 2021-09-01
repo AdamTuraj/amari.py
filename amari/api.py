@@ -129,7 +129,13 @@ class AmariClient:
         if response.status > 399 or response.status < 200:
             error = cls.HTTP_response_errors.get(response.status, HTTPException)
             try:
-                message = (await response.json())["error"]  # clean this up later
+                data = await response.json()
+                if "error" in data:
+                    message = data["error"]
+                elif "message" in data:
+                    message = data["message"]
+                else:
+                    message = data
             except Exception:
                 message = await response.text()
             raise error(response, message)

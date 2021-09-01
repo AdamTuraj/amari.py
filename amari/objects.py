@@ -1,6 +1,6 @@
 from typing import Optional, Iterator, Tuple, Any, Dict
 
-__all__ = ("User", "Leaderboard", "Rewards")
+__all__ = ("User", "Leaderboard", "RewardRole", "Rewards")
 
 
 class _SlotsReprMixin:
@@ -18,9 +18,9 @@ class _SlotsReprMixin:
 
 
 class User(_SlotsReprMixin):
-    __slots__ = ("user_id", "name", "guild_id", "exp", "level", "weeklyexp", "position")
+    __slots__ = ("user_id", "name", "guild_id", "exp", "level", "weeklyexp", "position", "leaderboard")
 
-    def __init__(self, guild_id: int, data: dict, position: Optional[int] = None, *, leaderboard: Optional[Leaderboard] = None):
+    def __init__(self, guild_id: int, data: dict, position: Optional[int] = None, *, leaderboard = None):
         self.guild_id: int = guild_id
         self.user_id: int = int(data["id"])
         self.name: str = data["username"]
@@ -30,6 +30,7 @@ class User(_SlotsReprMixin):
             int(data.get("weeklyExp")) if data.get("weeklyExp") else None
         )
         self.position: Optional[int] = position
+        self.leaderboard = leaderboard
 
 
 class Leaderboard:
