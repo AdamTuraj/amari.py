@@ -6,7 +6,13 @@ import aiohttp
 
 from datetime import datetime
 
-from .exceptions import HTTPException, NotFound, InvalidToken, Ratelimited, AmariServerError
+from .exceptions import (
+    HTTPException,
+    NotFound,
+    InvalidToken,
+    RatelimitException,
+    AmariServerError,
+)
 from .objects import User, Leaderboard, Rewards
 
 __all__ = ("AmariClient",)
@@ -20,7 +26,7 @@ class AmariClient:
     HTTP_response_errors = {
         404: NotFound,
         403: InvalidToken,
-        429: Ratelimited,
+        429: RatelimitException,
         500: AmariServerError,
     }
 
@@ -33,8 +39,17 @@ class AmariClient:
         self.max_requests = 60
         self.request_period = 60
 
-    async def close(self):
-        await self.session.close()
+    def __del__(self):
+        try:
+            loop = asyncio.get_event_loop()
+
+            if loop.is_running():
+                loop.create_task(self.session.close())
+            else:
+                loop.run_until_complete(self.session.close())
+
+        except Exception:
+            pass
 
     def update_ratelimit(self):
         for request_time in self.requests:
@@ -48,10 +63,8 @@ class AmariClient:
             await self.wait_for_ratelimit_end()
 
     async def wait_for_ratelimit_end(self):
-        test = 0
         for count in range(1, 6):
             wait_amount = 2 ** count
-            test += wait_amount
 
             logger.warning(
                 f"Slow down, you are about to be rate limited. Trying again in {wait_amount} seconds."
@@ -79,15 +92,14 @@ class AmariClient:
     ) -> Rewards:
         params = {"page": page, "limit": limit}
         data = await self.request(f"guild/rewards/{guild_id}", params=params)
-        data["id"] = guild_id
-        return Rewards(data)
+        return Rewards(guild_id, data)
 
     @classmethod
     async def check_response_for_errors(cls, response: aiohttp.ClientResponse):
         if response.status > 399 or response.status < 200:
             error = cls.HTTP_response_errors.get(response.status, HTTPException)
             try:
-                message = (await response.json())["error"] # clean this up later
+                message = (await response.json())["error"]  # clean this up later
             except Exception:
                 message = await response.text()
             raise error(response, message)
@@ -99,6 +111,6 @@ class AmariClient:
             headers=self.default_headers,
             params=params,
         ) as response:
-            self.check_response_for_errors(response)
+            await self.check_response_for_errors(response)
             self.requests.append(datetime.utcnow())
             return await response.json()

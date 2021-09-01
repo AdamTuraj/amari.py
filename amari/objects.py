@@ -15,6 +15,9 @@ class User:
         )
         self.position: int = position
 
+    def __repr__(self) -> str:
+        return f"<User user_id={self.user_id} exp={self.exp}>"
+
 
 class Leaderboard:
     __slots__ = ("guild_id", "total_count", "leaderboard")
@@ -34,15 +37,15 @@ class Leaderboard:
 
 
 class Rewards:
-    __slots__ = ("id", "count", "roles")
+    __slots__ = ("guild_id", "reward_count", "rewards")
 
-    def __init__(self, data):
-        self.set_data(data)
+    def __init__(self, guild_id: int, data: dict):
+        self.guild_id: int = guild_id
+        self.reward_count: int = int(data["count"])
+        self.rewards = [(role["level"], role["roleID"]) for role in data["data"]]
 
-    def __str__(self) -> str:
-        return str(self.id)
+    def __repr__(self) -> str:
+        return f"<Rewards guild_id={self.guild_id} reward_count = {self.reward_count}>"
 
-    def set_data(self, data):
-        self.id = int(data["id"])
-        self.count = int(data["count"])
-        self.roles = [(role["level"], role["roleID"]) for role in data["data"]]
+    def __len__(self) -> int:
+        return self.reward_count
