@@ -1,19 +1,13 @@
+import asyncio
 import logging
+from datetime import datetime
 from typing import Dict, Optional
 
-import asyncio
 import aiohttp
 
-from datetime import datetime
-
-from .exceptions import (
-    HTTPException,
-    NotFound,
-    InvalidToken,
-    RatelimitException,
-    AmariServerError,
-)
-from .objects import User, Leaderboard, Rewards
+from .exceptions import (AmariServerError, HTTPException, InvalidToken,
+                         NotFound, RatelimitException)
+from .objects import Leaderboard, Rewards, User
 
 __all__ = ("AmariClient",)
 
@@ -30,7 +24,9 @@ class AmariClient:
         500: AmariServerError,
     }
 
-    def __init__(self, token: str, *, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(
+        self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None
+    ):
         self.session = session or aiohttp.ClientSession()
         self.default_headers = {"Authorization": token}
 
@@ -89,7 +85,7 @@ class AmariClient:
         return User(guild_id, data)
 
     async def fetch_leaderboard(
-        self, guild_id: int, *, weekly: bool = False, page: int = 1, limit: int = 50
+        self, guild_id: int, /, *, weekly: bool = False, page: int = 1, limit: int = 50
     ) -> Leaderboard:
         """Fetches a guilds leaderboard
 
@@ -108,7 +104,7 @@ class AmariClient:
         return Leaderboard(guild_id, data)
 
     async def fetch_rewards(
-        self, guild_id: int, *, page: int = 1, limit: int = 50
+        self, guild_id: int, /, *, page: int = 1, limit: int = 50
     ) -> Rewards:
         """Fetches a guilds role rewards
 
@@ -129,13 +125,7 @@ class AmariClient:
         if response.status > 399 or response.status < 200:
             error = cls.HTTP_response_errors.get(response.status, HTTPException)
             try:
-                data = await response.json()
-                if "error" in data:
-                    message = data["error"]
-                elif "message" in data:
-                    message = data["message"]
-                else:
-                    message = data
+                message = (await response.json())["error"]  # clean this up later
             except Exception:
                 message = await response.text()
             raise error(response, message)
