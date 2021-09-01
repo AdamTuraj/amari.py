@@ -76,12 +76,32 @@ class AmariClient:
                 break
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
+        """Fetches a user
+
+        Args:
+            guild_id (int): The guild id of the guild you are getting the user from
+            user_id (int): The user id of the user you are requesting
+
+        Returns:
+            User
+        """
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
 
     async def fetch_leaderboard(
         self, guild_id: int, *, weekly: bool = False, page: int = 1, limit: int = 50
     ) -> Leaderboard:
+        """Fetches a guilds leaderboard
+
+        Args:
+            guild_id (int): The id of the guild you are fetching the leaderboard from
+            weekly (bool, optional): Choose either to fetch the weekly leaderboard or the regular leaderboard. Defaults to False.
+            page (int, optional): The leaderboard page you are fetching. Defaults to 1.
+            limit (int, optional): The amount of users that will be on the requested page. Defaults to 50.
+
+        Returns:
+            Leaderboard
+        """
         params = {"page": page, "limit": limit}
         lb_type = "weekly" if weekly else "leaderboard"
         data = await self.request(f"guild/{lb_type}/{guild_id}", params=params)
@@ -90,6 +110,16 @@ class AmariClient:
     async def fetch_rewards(
         self, guild_id: int, *, page: int = 1, limit: int = 50
     ) -> Rewards:
+        """Fetches a guilds role rewards
+
+        Args:
+            guild_id (int): The guild id you are requesting the role rewards from
+            page (int, optional): The reward page you are requesting. Defaults to 1.
+            limit (int, optional): The amount of rewards that will be on the requested page. Defaults to 50.
+
+        Returns:
+            Rewards
+        """
         params = {"page": page, "limit": limit}
         data = await self.request(f"guild/rewards/{guild_id}", params=params)
         return Rewards(guild_id, data)
