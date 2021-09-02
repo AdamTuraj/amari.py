@@ -1,22 +1,22 @@
 import asyncio
 
 # Importing the package
-from amari import AmariBot
+from amari import AmariClient
 
 
 # Creating the function to get the rewards
-async def get_amari_rewards(guild_id):
+async def fetch_amari_rewards(guild_id):
     # Initialize the package and
     # Make sure to put your api token here
-    amari = AmariBot("authorization_token")
+    amari = AmariClient("authorization_token")
     # Gets the reward and returns it
     # I set the limit to 100 to make sure it will return all of the possible rewards
-    return await amari.get_rewards(guild_id, limit=100)
+    return await amari.fetch_rewards(guild_id, limit=100)
 
 
 async def get_max_reward(guild_id):
     # Gets the rewards
-    rewards = await get_amari_rewards(guild_id)
+    rewards = await fetch_amari_rewards(guild_id)
 
     # Here it returns the final reward. The -1 does that for you!
     return rewards.roles[-1]
