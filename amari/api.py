@@ -1,48 +1,48 @@
-import logging
-from typing import Dict
-
 import asyncio
+import logging
+from datetime import datetime
+from typing import Dict, Optional
+
 import aiohttp
 
-from datetime import datetime
+from .exceptions import AmariServerError, HTTPException, InvalidToken, NotFound, RatelimitException
+from .objects import Leaderboard, Rewards, User
 
-from .exceptions import NotFound, InvalidToken, Ratelimited, AmariServerError
-
-from .objects import User, Leaderboard, Rewards
-
-BASE_URL = "https://amaribot.com/api/v1/"
+__all__ = ("AmariClient",)
 
 logger = logging.getLogger(__name__)
 
-HTTP_response_errors = {
-    404: NotFound,
-    403: InvalidToken,
-    429: Ratelimited,
-    500: AmariServerError,
-}
 
+class AmariClient:
+    BASE_URL = "https://amaribot.com/api/v1/"
 
-def check_response_for_errors(resp_status):
-    if resp_status in HTTP_response_errors:
-        raise HTTP_response_errors[resp_status]
+    HTTP_response_errors = {
+        404: NotFound,
+        403: InvalidToken,
+        429: RatelimitException,
+        500: AmariServerError,
+    }
 
-
-class AmariBot:
-    def __init__(self, token: str):
-
-        if not isinstance(token, str):
-            raise TypeError("The token must be a string.")
-
-        self.baseurl = BASE_URL
-
+    def __init__(self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None):
+        self.session = session or aiohttp.ClientSession()
         self.default_headers = {"Authorization": token}
 
         # Anti Ratelimit section
         self.requests = []
-
         self.max_requests = 60
-        # Value in seconds
         self.request_period = 60
+
+    def __del__(self):
+        try:
+            loop = asyncio.get_event_loop()
+
+            if loop.is_running():
+                loop.create_task(self.session.close())
+            else:
+                loop.run_until_complete(self.session.close())
+
+        except Exception:
+            pass
 
     def update_ratelimit(self):
         for request_time in self.requests:
@@ -56,10 +56,8 @@ class AmariBot:
             await self.wait_for_ratelimit_end()
 
     async def wait_for_ratelimit_end(self):
-        test = 0
         for count in range(1, 6):
             wait_amount = 2 ** count
-            test += wait_amount
 
             logger.warning(
                 f"Slow down, you are about to be rate limited. Trying again in {wait_amount} seconds."
@@ -70,81 +68,70 @@ class AmariBot:
             if len(self.requests) != self.max_requests - 1:
                 break
 
-    async def get_user(self, guild_id: int, user_id: int) -> User:
-        if not isinstance(guild_id, int):
-            raise TypeError("The guild_id must be an int.")
+    async def fetch_user(self, guild_id: int, user_id: int) -> User:
+        """Fetches a user
 
-        if not isinstance(user_id, int):
-            raise TypeError("The user_id must be an int.")
+        Args:
+            guild_id (int): The guild id of the guild you are getting the user from
+            user_id (int): The user id of the user you are requesting
 
-        data = await self.create_request(
-            "guild/{guild_id}/member/{user_id}".format(
-                guild_id=guild_id, user_id=user_id
-            ),
-        )
+        Returns:
+            User
+        """
+        data = await self.request(f"guild/{guild_id}/member/{user_id}")
+        return User(guild_id, data)
 
-        return User(data)
-
-    async def get_leaderboard(
-        self, guild_id: int, *, weekly: bool = False, page: int = 1, limit: int = 50
+    async def fetch_leaderboard(
+        self, guild_id: int, /, *, weekly: bool = False, page: int = 1, limit: int = 50
     ) -> Leaderboard:
-        if not isinstance(guild_id, int):
-            raise TypeError("The guild_id must be an int.")
+        """Fetches a guilds leaderboard
 
-        if not isinstance(weekly, bool):
-            raise TypeError("The weekly variable must be a bool.")
+        Args:
+            guild_id (int): The id of the guild you are fetching the leaderboard from
+            weekly (bool, optional): Choose either to fetch the weekly leaderboard or the regular leaderboard. Defaults to False.
+            page (int, optional): The leaderboard page you are fetching. Defaults to 1.
+            limit (int, optional): The amount of users that will be on the requested page. Defaults to 50.
 
-        if not isinstance(page, int):
-            raise TypeError("The page must be an int.")
-
-        if not isinstance(limit, int):
-            raise TypeError("The limit must be an int.")
-
+        Returns:
+            Leaderboard
+        """
         params = {"page": page, "limit": limit}
+        lb_type = "weekly" if weekly else "leaderboard"
+        data = await self.request(f"guild/{lb_type}/{guild_id}", params=params)
+        return Leaderboard(guild_id, data)
 
-        data = await self.create_request(
-            "guild/{lbtype}/{guild_id}".format(
-                lbtype="weekly" if weekly else "leaderboard", guild_id=guild_id
-            ),
-            params=params,
-        )
+    async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
+        """Fetches a guilds role rewards
 
-        data["id"] = guild_id
-        return Leaderboard(data)
+        Args:
+            guild_id (int): The guild id you are requesting the role rewards from
+            page (int, optional): The reward page you are requesting. Defaults to 1.
+            limit (int, optional): The amount of rewards that will be on the requested page. Defaults to 50.
 
-    async def get_rewards(
-        self, guild_id: int, *, page: int = 1, limit: int = 50
-    ) -> Rewards:
-        if not isinstance(guild_id, int):
-            raise TypeError("The guild_id must be an int.")
-
-        if not isinstance(page, int):
-            raise TypeError("The page must be an int.")
-
-        if not isinstance(limit, int):
-            raise TypeError("The limit must be an int.")
-
+        Returns:
+            Rewards
+        """
         params = {"page": page, "limit": limit}
+        data = await self.request(f"guild/rewards/{guild_id}", params=params)
+        return Rewards(guild_id, data)
 
-        data = await self.create_request(
-            "guild/rewards/{guild_id}".format(guild_id=guild_id),
-            params=params,
-        )
+    @classmethod
+    async def check_response_for_errors(cls, response: aiohttp.ClientResponse):
+        if response.status > 399 or response.status < 200:
+            error = cls.HTTP_response_errors.get(response.status, HTTPException)
+            try:
+                message = (await response.json())["error"]  # clean this up later
+            except Exception:
+                message = await response.text()
+            raise error(response, message)
 
-        data["id"] = guild_id
-        return Rewards(data)
-
-    async def create_request(self, endpoint: str, *, params: Dict = {}) -> Dict:
+    async def request(self, endpoint: str, *, params: Dict = {}) -> Dict:
         await self.check_and_update_ratelimit()
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url=self.baseurl + endpoint,
-                headers=self.default_headers,
-                params=params,
-            ) as response:
-
-                check_response_for_errors(response.status)
-
-                self.requests.append(datetime.utcnow())
-                return await response.json()
+        async with self.session.get(
+            url=self.BASE_URL + endpoint,
+            headers=self.default_headers,
+            params=params,
+        ) as response:
+            await self.check_response_for_errors(response)
+            self.requests.append(datetime.utcnow())
+            return await response.json()

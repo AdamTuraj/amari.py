@@ -1,4 +1,4 @@
-__version__ = "1.0.3.1"
+__version__ = "1.1.0"
 
 from .api import *
 from .exceptions import *

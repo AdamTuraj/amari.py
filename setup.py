@@ -1,4 +1,5 @@
 from setuptools import setup
+
 import amari.__init__ as init
 
 readme = ""
