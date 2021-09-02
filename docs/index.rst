@@ -22,11 +22,24 @@ If you have questions or require support please contact me in the `Amaribot supp
 
 .. toctree::
    :maxdepth: 1
+   :caption: Getting Started
+
+   getting_an_authorization_token
+   quickstart
+
+.. toctree::
+   :maxdepth: 2
    :caption: API Reference
 
    amariclient
    objects
    exceptions
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Credits
+
+   credits
 
 Indices and tables
 ==================
