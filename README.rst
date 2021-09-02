@@ -32,7 +32,7 @@ Key features
 Support
 -------
 
-If you have any questions or require support with the API wrapper, visit the `AmariBot Support Server <https://discord.gg/qKkSUSwU2G>`_ and ask in channel it brings you to.
+If you have any questions or require support with the API wrapper, visit the `AmariBot Support Server <https://discord.gg/qKkSUSwU2G>`_ and ask in `#amari.py <https://discord.com/channels/346474194394939393/882370112710123570>`_.
 
 Bugs
 ----
@@ -42,4 +42,4 @@ If you find any bugs with the library, you can report it by creating a bug issue
 Docs
 ----
 
-Visit the `Amari.py docs <https://amaripy.gitbook.io/docs/>`_ for usage of the library.
+Visit the `Amari.py docs <https://amaripy.readthedocs.io/en/latest/>`_ for usage of the library.
