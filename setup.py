@@ -10,7 +10,7 @@ setup(
     name="amari",
     version=init.__version__,
     url="https://github.com/TheF1ng3r/amari.py",
-    project_urls={"Documentation": "https://amaripy.gitbook.io/docs/"},
+    project_urls={"Documentation": "https://amaripy.readthedocs.io/en/latest/"},
     description="An asynchronous API wrapper for the Amari API.",
     long_description=readme,
     author="TheF1ng3r",

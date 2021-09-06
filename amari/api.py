@@ -2,10 +2,17 @@ import asyncio
 import logging
 from datetime import datetime
 from typing import Dict, Optional
+import math
 
 import aiohttp
 
-from .exceptions import AmariServerError, HTTPException, InvalidToken, NotFound, RatelimitException
+from .exceptions import (
+    AmariServerError,
+    HTTPException,
+    InvalidToken,
+    NotFound,
+    RatelimitException,
+)
 from .objects import Leaderboard, Rewards, User
 
 __all__ = ("AmariClient",)
@@ -23,7 +30,9 @@ class AmariClient:
         500: AmariServerError,
     }
 
-    def __init__(self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(
+        self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None
+    ):
         self.session = session or aiohttp.ClientSession()
         self.default_headers = {"Authorization": token}
 
@@ -100,7 +109,45 @@ class AmariClient:
         data = await self.request(f"guild/{lb_type}/{guild_id}", params=params)
         return Leaderboard(guild_id, data)
 
-    async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
+    async def fetch_full_leaderboard(
+        self, guild_id: int, /, *, weekly: bool = False
+    ) -> Leaderboard:
+        """Fetches the entire leaderboard of a guild
+
+        Args:
+            guild_id (int): The id of the guild you are fetching the leaderboard from
+            weekly (bool, optional): Choose either to fetch the weekly leaderboard or the regular leaderboard. Defaults to False.
+
+        Returns:
+            Leaderboard
+        """
+        lb_type = "weekly" if weekly else "leaderboard"
+
+        main_leaderboard = Leaderboard(
+            guild_id,
+            await self.request(f"guild/{lb_type}/{guild_id}", params={"limit": 1000}),
+        )
+
+        main_leaderboard.user_count = main_leaderboard.total_count
+
+        required_requests = math.ceil(main_leaderboard.total_count / 1000) - 1
+
+        for page in range(required_requests):
+            request = await self.request(
+                f"guild/{lb_type}/{guild_id}",
+                params={"page": page + 2, "limit": 1000},
+            )
+
+            leaderboard = Leaderboard(guild_id, request)
+
+            for user in leaderboard.users.values():
+                main_leaderboard.add_user(user)
+
+        return main_leaderboard
+
+    async def fetch_rewards(
+        self, guild_id: int, /, *, page: int = 1, limit: int = 50
+    ) -> Rewards:
         """Fetches a guilds role rewards
 
         Args:

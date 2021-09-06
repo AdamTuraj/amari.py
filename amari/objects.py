@@ -64,7 +64,7 @@ class Leaderboard:
         }
 
     def __repr__(self) -> str:
-        return f"<Leaderboard guild_id={self.guild_id} total_count={self.total_count}>"
+        return f"<Leaderboard guild_id={self.guild_id} user_count={self.user_count}>"
 
     def __len__(self) -> int:
         return self.user_count
@@ -73,7 +73,27 @@ class Leaderboard:
         yield from self.users.copy().values()
 
     def get_user(self, user_id: int, /) -> Optional[User]:
+        """Gets a user from the leaderboards users
+
+        Args:
+            user_id (int): The user id of the user you are trying to get.
+
+        Returns:
+            Optional[User]
+        """
         return self.users.get(user_id)
+
+    def add_user(self, user: User, /) -> Leaderboard:
+        """Adds a user to the leaderboards users
+
+        Args:
+            user (User): The user you are trying to add
+
+        Returns:
+            Leaderboard
+        """
+        self.users[user.user_id] = user
+        return Leaderboard
 
 
 class RewardRole(_SlotsReprMixin):
@@ -93,8 +113,9 @@ class Rewards:
         self.reward_count: int = int(data["count"])
         self.roles: Dict[int, RewardRole] = {}
         for role_data in data["data"]:
-            role_id = int(role_data["roleID"])
-            self.roles[role_id] = RewardRole(role_id, role_data["level"], self)
+            self.roles[int(role_data["roleID"])] = RewardRole(
+                int(role_data["roleID"]), role_data["level"], self
+            )
 
     def __repr__(self) -> str:
         return f"<Rewards guild_id={self.guild_id} reward_count={self.reward_count}>"
@@ -106,4 +127,12 @@ class Rewards:
         yield from self.roles.copy().values()
 
     def get_role(self, role_id: int, /) -> Optional[RewardRole]:
+        """Gets a role from the reward roles
+
+        Args:
+            role_id (int): The id of the role you are trying to get
+
+        Returns:
+            Optional[RewardRole]
+        """
         return self.roles.get(role_id)
