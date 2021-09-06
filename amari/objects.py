@@ -56,7 +56,7 @@ class Leaderboard:
 
     def __init__(self, guild_id: int, data: dict):
         self.guild_id: int = guild_id
-        self.user_count: int = data["user_count"]
+        self.user_count: int = data["count"]
         self.total_count: int = data["total_count"]
         self.users: Dict[int, User] = {
             int(user_data["id"]): User(guild_id, user_data, i, leaderboard=self)
