@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class AmariClient:
+    """The base class for the Amari API"""
+
     BASE_URL = "https://amaribot.com/api/v1/"
 
     HTTP_response_errors = {
@@ -30,9 +32,7 @@ class AmariClient:
         500: AmariServerError,
     }
 
-    def __init__(
-        self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None
-    ):
+    def __init__(self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None):
         self.session = session or aiohttp.ClientSession()
         self.default_headers = {"Authorization": token}
 
@@ -82,7 +82,14 @@ class AmariClient:
         return User(guild_id, data)
 
     async def fetch_leaderboard(
-        self, guild_id: int, /, *, weekly: bool = False, raw: bool = False, page: Optional[int] = None, limit: Optional[int] = None
+        self,
+        guild_id: int,
+        /,
+        *,
+        weekly: bool = False,
+        raw: bool = False,
+        page: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> Leaderboard:
         """Fetches a guilds leaderboard
 
@@ -145,9 +152,7 @@ class AmariClient:
 
         return main_leaderboard
 
-    async def fetch_rewards(
-        self, guild_id: int, /, *, page: int = 1, limit: int = 50
-    ) -> Rewards:
+    async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
         """Fetches a guilds role rewards
 
         Args:

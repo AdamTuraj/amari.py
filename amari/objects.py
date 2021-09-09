@@ -20,6 +20,8 @@ class _SlotsReprMixin:
 
 
 class User(_SlotsReprMixin):
+    """The object for Amari users."""
+
     __slots__ = (
         "user_id",
         "name",
@@ -52,6 +54,8 @@ class User(_SlotsReprMixin):
 
 
 class Leaderboard:
+    """The object for a guilds leaderboard"""
+
     __slots__ = ("guild_id", "user_count", "total_count", "users")
 
     def __init__(self, guild_id: int, data: dict):
@@ -97,6 +101,8 @@ class Leaderboard:
 
 
 class RewardRole(_SlotsReprMixin):
+    """The object for a rewards role"""
+
     __slots__ = ("role_id", "level", "rewards")
 
     def __init__(self, role_id: int, level: int, rewards):
@@ -106,6 +112,8 @@ class RewardRole(_SlotsReprMixin):
 
 
 class Rewards:
+    """The base object for a guilds rewards"""
+
     __slots__ = ("guild_id", "reward_count", "roles")
 
     def __init__(self, guild_id: int, data: dict):
