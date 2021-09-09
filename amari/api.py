@@ -41,17 +41,8 @@ class AmariClient:
         self.max_requests = 60
         self.request_period = 60
 
-    def __del__(self):
-        try:
-            loop = asyncio.get_event_loop()
-
-            if loop.is_running():
-                loop.create_task(self.session.close())
-            else:
-                loop.run_until_complete(self.session.close())
-
-        except Exception:
-            pass
+    async def close(self):
+        await self.session.close()
 
     def update_ratelimit(self):
         for request_time in self.requests:
@@ -91,7 +82,7 @@ class AmariClient:
         return User(guild_id, data)
 
     async def fetch_leaderboard(
-        self, guild_id: int, /, *, weekly: bool = False, page: int = 1, limit: int = 50
+        self, guild_id: int, /, *, weekly: bool = False, raw: bool = False, page: Optional[int] = None, limit: Optional[int] = None
     ) -> Leaderboard:
         """Fetches a guilds leaderboard
 
@@ -104,9 +95,18 @@ class AmariClient:
         Returns:
             Leaderboard
         """
-        params = {"page": page, "limit": limit}
+        params = {}
+        if raw and page:
+            raise ValueError("raw endpoints do not support pagination")
+        if page is not None:
+            params["page"] = page
+        if limit is not None:
+            params["limit"] = limit
         lb_type = "weekly" if weekly else "leaderboard"
-        data = await self.request(f"guild/{lb_type}/{guild_id}", params=params)
+        endpoint = ["guild", lb_type, str(guild_id)]
+        if raw:
+            endpoint.insert(1, "raw")
+        data = await self.request("/".join(endpoint), params=params)
         return Leaderboard(guild_id, data)
 
     async def fetch_full_leaderboard(
