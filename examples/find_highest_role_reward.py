@@ -18,7 +18,9 @@ async def get_max_reward(guild_id):
     # Gets the rewards
     rewards = await fetch_amari_rewards(guild_id)
 
-    # Here it returns the last key of the rewards. This is doing that by turning the rewards into a list of all the keys, then getting the last value with the -1.
+    # Here it returns the last key of the rewards.
+    # This is doing that by turning the rewards into a list of all the keys,
+    # then getting the last value with the -1.
     final_key = list(rewards.roles)[-1]
 
     # Here we get the role from that key we just got

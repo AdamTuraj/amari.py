@@ -89,6 +89,7 @@ class Leaderboard:
     users: Dict[int, User]
         The users in the leaderboard.
     """
+
     __slots__ = ("guild_id", "user_count", "total_count", "users")
 
     def __init__(self, guild_id: int, data: dict):
@@ -117,7 +118,7 @@ class Leaderboard:
         ----------
         user_id: int
             The user's ID.
-        
+
         Returns
         -------
         Optional[User]
@@ -187,9 +188,7 @@ class Rewards:
         self.roles: Dict[int, RewardRole] = {}
         for role_data in data["data"]:
             role_id = int(role_data["id"])
-            self.roles[role_id] = RewardRole(
-                role_id, role_data["level"], self
-            )
+            self.roles[role_id] = RewardRole(role_id, role_data["level"], self)
 
     def __repr__(self) -> str:
         return f"<Rewards guild_id={self.guild_id} reward_count={self.reward_count}>"
@@ -208,7 +207,7 @@ class Rewards:
         ----------
         role_id: int
             The role's ID.
-        
+
         Returns
         -------
         Optional[RewardRole]

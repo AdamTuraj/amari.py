@@ -72,7 +72,8 @@ class AmariClient:
             wait_amount = 2 ** count
 
             logger.warning(
-                f"Slow down, you are about to be rate limited. Trying again in {wait_amount} seconds."
+                "Slow down, you are about to be rate limited."
+                f"Trying again in {wait_amount} seconds."
             )
             await asyncio.sleep(wait_amount)
 
@@ -155,7 +156,7 @@ class AmariClient:
             The guild ID to fetch the leaderboard from.
         weekly: bool
             Choose either to fetch the weekly leaderboard or the regular leaderboard.
-        
+
         Returns
         -------
         Leaderboard
@@ -197,7 +198,7 @@ class AmariClient:
             The rewards page to fetch.
         limit: int
             The amount of rewards to fetch per page.
-        
+
         Returns
         -------
         Rewards
@@ -213,7 +214,7 @@ class AmariClient:
             error = cls.HTTP_response_errors.get(response.status, HTTPException)
             try:
                 message = (await response.json())["error"]  # clean this up later
-            except Exception:
+            except Exception:  # skipcq PYL-W0703
                 message = await response.text()
             raise error(response, message)
 
