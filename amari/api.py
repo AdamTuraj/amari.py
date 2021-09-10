@@ -21,7 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 class AmariClient:
-    """The base class for the Amari API"""
+    """
+    The client used to make requests to the Amari API.
+
+    Attributes
+    ----------
+    session: aiohttp.ClientSession
+        The client session used to make requests to the Amari API.
+    """
 
     BASE_URL = "https://amaribot.com/api/v1/"
 
@@ -34,7 +41,7 @@ class AmariClient:
 
     def __init__(self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None):
         self.session = session or aiohttp.ClientSession()
-        self.default_headers = {"Authorization": token}
+        self._default_headers = {"Authorization": token}
 
         # Anti Ratelimit section
         self.requests = []
@@ -42,6 +49,11 @@ class AmariClient:
         self.request_period = 60
 
     async def close(self):
+        """
+        Closes the client resources.
+
+        This must be called once the client is no longer in use.
+        """
         await self.session.close()
 
     def update_ratelimit(self):
@@ -69,14 +81,15 @@ class AmariClient:
                 break
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
-        """Fetches a user
+        """
+        Fetches a user from the Amari API.
 
-        Args:
-            guild_id (int): The guild id of the guild you are getting the user from
-            user_id (int): The user id of the user you are requesting
-
-        Returns:
-            User
+        Parameters
+        ----------
+        guild_id: int
+            The guild ID to fetch the user from.
+        user_id: int
+            The user's ID.
         """
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
@@ -91,16 +104,27 @@ class AmariClient:
         page: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> Leaderboard:
-        """Fetches a guilds leaderboard
+        """
+        Fetches a guild's leaderboard from the Amari API.
 
-        Args:
-            guild_id (int): The id of the guild you are fetching the leaderboard from
-            weekly (bool, optional): Choose either to fetch the weekly leaderboard or the regular leaderboard. Defaults to False.
-            page (int, optional): The leaderboard page you are fetching. Defaults to 1.
-            limit (int, optional): The amount of users that will be on the requested page. Defaults to 50.
+        Parameters
+        ----------
+        guild_id: int
+            The guild ID to fetch the leaderboard from.
+        weekly: bool
+            Choose either to fetch the weekly leaderboard or the regular leaderboard.
+        raw: bool
+            Whether or not to use the raw endpoint. Raw endpoints do not support pagination but
+            will return the entire leaderboard.
+        page: int
+            The leaderboard page to fetch.
+        limit: int
+            The amount of users to fetch per page.
 
-        Returns:
-            Leaderboard
+        Returns
+        -------
+        Leaderboard
+            The guild's leaderboard.
         """
         params = {}
         if raw and page:
@@ -119,14 +143,23 @@ class AmariClient:
     async def fetch_full_leaderboard(
         self, guild_id: int, /, *, weekly: bool = False
     ) -> Leaderboard:
-        """Fetches the entire leaderboard of a guild
+        """
+        Fetches a guild's full leaderboard from the Amari API.
 
-        Args:
-            guild_id (int): The id of the guild you are fetching the leaderboard from
-            weekly (bool, optional): Choose either to fetch the weekly leaderboard or the regular leaderboard. Defaults to False.
+        This uses pagination to make fetch a full leaderboard by making multiple requests.
+        Consider using the raw endpoints to fetch the full leaderboard without making multiple requests.
 
-        Returns:
-            Leaderboard
+        Parameters
+        ----------
+        guild_id: int
+            The guild ID to fetch the leaderboard from.
+        weekly: bool
+            Choose either to fetch the weekly leaderboard or the regular leaderboard.
+        
+        Returns
+        -------
+        Leaderboard
+            The guild's leaderboard.
         """
         lb_type = "weekly" if weekly else "leaderboard"
 
@@ -153,15 +186,22 @@ class AmariClient:
         return main_leaderboard
 
     async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
-        """Fetches a guilds role rewards
+        """
+        Fetches a guild's role rewards from the Amari API.
 
-        Args:
-            guild_id (int): The guild id you are requesting the role rewards from
-            page (int, optional): The reward page you are requesting. Defaults to 1.
-            limit (int, optional): The amount of rewards that will be on the requested page. Defaults to 50.
-
-        Returns:
-            Rewards
+        Parameters
+        ----------
+        guild_id: int
+            The guild ID to fetch the role rewards from.
+        page: int
+            The rewards page to fetch.
+        limit: int
+            The amount of rewards to fetch per page.
+        
+        Returns
+        -------
+        Rewards
+            The guild's role rewards.
         """
         params = {"page": page, "limit": limit}
         data = await self.request(f"guild/rewards/{guild_id}", params=params)
@@ -181,7 +221,7 @@ class AmariClient:
         await self.check_and_update_ratelimit()
         async with self.session.get(
             url=self.BASE_URL + endpoint,
-            headers=self.default_headers,
+            headers=self._default_headers,
             params=params,
         ) as response:
             await self.check_response_for_errors(response)
