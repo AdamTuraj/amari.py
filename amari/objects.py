@@ -215,4 +215,3 @@ class Rewards:
             The role, if found in the rewards.
         """
         return self.roles.get(role_id)
-        return self.roles.get(role_id)
