@@ -1,6 +1,10 @@
 Amari.py
 ========
 
+.. image:: https://readthedocs.org/projects/amaripy/badge/?version=latest
+   :target: https://amaripy.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://img.shields.io/pypi/v/amari.py.svg
    :target: https://pypi.org/project/amari.py/
    :alt: PyPi Library version

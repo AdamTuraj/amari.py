@@ -5,6 +5,8 @@ from typing import Dict, Optional
 import math
 
 import aiohttp
+from asyncache import cached
+from cachetools import TTLCache
 
 from .exceptions import (
     AmariServerError,
@@ -72,7 +74,7 @@ class AmariClient:
             wait_amount = 2 ** count
 
             logger.warning(
-                "Slow down, you are about to be rate limited."
+                "Slow down, you are about to be rate limited. "
                 f"Trying again in {wait_amount} seconds."
             )
             await asyncio.sleep(wait_amount)
@@ -81,6 +83,7 @@ class AmariClient:
             if len(self.requests) != self.max_requests - 1:
                 break
 
+    @cached(TTLCache(1024, 180))
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
         """
         Fetches a user from the Amari API.
@@ -95,6 +98,7 @@ class AmariClient:
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
 
+    @cached(TTLCache(1024, 180))
     async def fetch_leaderboard(
         self,
         guild_id: int,
@@ -141,6 +145,7 @@ class AmariClient:
         data = await self.request("/".join(endpoint), params=params)
         return Leaderboard(guild_id, data)
 
+    @cached(TTLCache(1024, 180))
     async def fetch_full_leaderboard(
         self, guild_id: int, /, *, weekly: bool = False
     ) -> Leaderboard:
@@ -186,6 +191,7 @@ class AmariClient:
 
         return main_leaderboard
 
+    @cached(TTLCache(1024, 180))
     async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
         """
         Fetches a guild's role rewards from the Amari API.
@@ -213,8 +219,8 @@ class AmariClient:
         if response.status > 399 or response.status < 200:
             error = cls.HTTP_response_errors.get(response.status, HTTPException)
             try:
-                message = (await response.json())["error"]  # clean this up later
-            except Exception:  # skipcq PYL-W0703
+                message = (await response.json())["error"]
+            except Exception:
                 message = await response.text()
             raise error(response, message)
 
