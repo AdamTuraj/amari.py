@@ -5,14 +5,14 @@ from typing import Dict, Optional
 
 import aiohttp
 
-from .exceptions import (
+from exceptions import (
     AmariServerError,
     HTTPException,
     InvalidToken,
     NotFound,
     RatelimitException,
 )
-from .objects import Leaderboard, Rewards, User, Users
+from objects import Leaderboard, Rewards, User, Users
 
 __all__ = ("AmariClient",)
 
@@ -164,6 +164,7 @@ class AmariClient:
         endpoint = ["guild", lb_type, str(guild_id)]
         if raw:
             endpoint.insert(1, "raw")
+
         data = await self.request("/".join(endpoint), params=params)
         return Leaderboard(guild_id, data)
 
@@ -187,7 +188,7 @@ class AmariClient:
         """
         lb_type = "weekly" if weekly else "leaderboard"
 
-        data = await self.request(f"guild/{lb_type}/{guild_id}", params={"limit": 0})
+        data = await self.request(f"guild/raw/{lb_type}/{guild_id}", params={"limit": 0})
 
         return Leaderboard(guild_id, data)
 
