@@ -74,6 +74,72 @@ class User(_SlotsReprMixin):
         self.leaderboard = leaderboard
 
 
+class Users:
+    """
+    An object which holds multiple users.
+
+    Attributes
+    ----------
+    guild_id: int
+        The guild ID.
+    users: list
+        The list of users.
+    total_members: int
+        The amount of users in the list.
+    queried_members: int
+        The amount of users requested.
+    """
+
+    __slots__ = ("guild_id", "users", "total_members", "queried_members")
+
+    def __init__(self, guild_id: int, data: dict):
+        self.guild_id: int = guild_id
+        self.users: dict = {int(user["id"]): User(guild_id, user) for user in data["members"]}
+        self.total_members: int = data["total_members"]
+        self.queried_members: int = data["queried_members"]
+
+    def __repr__(self) -> str:
+        return f"<Users guild_id={self.guild_id} user_count={self.total_members}>"
+
+    def __len__(self) -> int:
+        return self.total_members
+
+    def __iter__(self) -> Iterator[User]:
+        yield from self.users.copy().values()
+
+    def get_user(self, user_id: int, /) -> Optional[User]:
+        """
+        Get a user from the users object.
+
+        Parameters
+        ----------
+        user_id: int
+            The user's ID.
+
+        Returns
+        -------
+        Optional[User]
+            The user, if found in the users.
+        """
+        return self.users.get(user_id)
+
+    def add_user(self, user: User, /) -> Users:
+        """
+        Add a user to the users.
+
+        Parameters
+        ----------
+        user: User
+            The user to add.
+
+        Returns
+        -------
+        Users
+            The object of users the user was added to, for fluent class chaining.
+        """
+        self.users[user.user_id] = user
+
+
 class Leaderboard:
     """
     An Amari leaderboard.

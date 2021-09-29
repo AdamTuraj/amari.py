@@ -2,11 +2,8 @@ import asyncio
 import logging
 from datetime import datetime
 from typing import Dict, Optional
-import math
 
 import aiohttp
-from asyncache import cached
-from cachetools import TTLCache
 
 from .exceptions import (
     AmariServerError,
@@ -15,7 +12,7 @@ from .exceptions import (
     NotFound,
     RatelimitException,
 )
-from .objects import Leaderboard, Rewards, User
+from .objects import Leaderboard, Rewards, User, Users
 
 __all__ = ("AmariClient",)
 
@@ -41,7 +38,13 @@ class AmariClient:
         500: AmariServerError,
     }
 
-    def __init__(self, token: str, /, *, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(
+        self,
+        token: str,
+        /,
+        *,
+        session: Optional[aiohttp.ClientSession] = None,
+    ):
         self.session = session or aiohttp.ClientSession()
         self._default_headers = {"Authorization": token}
 
@@ -83,7 +86,6 @@ class AmariClient:
             if len(self.requests) != self.max_requests - 1:
                 break
 
-    @cached(TTLCache(1024, 180))
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
         """
         Fetches a user from the Amari API.
@@ -98,7 +100,27 @@ class AmariClient:
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
 
-    @cached(TTLCache(1024, 180))
+    async def fetch_users(self, guild_id: int, user_ids: list):
+        """
+        Fetches multiple users from the Amari API.
+
+        Parameters
+        ----------
+        guild_id: int
+            The guild ID to fetch the user from.
+        user_ids: list
+            The user IDs. They must be passed as a strings.
+        """
+        body = {"members": user_ids}
+        data = await self.request(
+            f"guild/{guild_id}/members",
+            method="POST",
+            extra_headers={"Content-Type": "application/json"},
+            json=body,
+        )
+
+        return Users(guild_id, data)
+
     async def fetch_leaderboard(
         self,
         guild_id: int,
@@ -145,15 +167,11 @@ class AmariClient:
         data = await self.request("/".join(endpoint), params=params)
         return Leaderboard(guild_id, data)
 
-    @cached(TTLCache(1024, 180))
     async def fetch_full_leaderboard(
         self, guild_id: int, /, *, weekly: bool = False
     ) -> Leaderboard:
         """
         Fetches a guild's full leaderboard from the Amari API.
-
-        This uses pagination to make fetch a full leaderboard by making multiple requests.
-        Consider using the raw endpoints to fetch the full leaderboard without making multiple requests.
 
         Parameters
         ----------
@@ -169,29 +187,10 @@ class AmariClient:
         """
         lb_type = "weekly" if weekly else "leaderboard"
 
-        main_leaderboard = Leaderboard(
-            guild_id,
-            await self.request(f"guild/{lb_type}/{guild_id}", params={"limit": 1000}),
-        )
+        data = await self.request(f"guild/{lb_type}/{guild_id}", params={"limit": 0})
 
-        main_leaderboard.user_count = main_leaderboard.total_count
+        return Leaderboard(guild_id, data)
 
-        required_requests = math.ceil(main_leaderboard.total_count / 1000) - 1
-
-        for page in range(required_requests):
-            request = await self.request(
-                f"guild/{lb_type}/{guild_id}",
-                params={"page": page + 2, "limit": 1000},
-            )
-
-            leaderboard = Leaderboard(guild_id, request)
-
-            for user in leaderboard.users.values():
-                main_leaderboard.add_user(user)
-
-        return main_leaderboard
-
-    @cached(TTLCache(1024, 180))
     async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
         """
         Fetches a guild's role rewards from the Amari API.
@@ -224,12 +223,21 @@ class AmariClient:
                 message = await response.text()
             raise error(response, message)
 
-    async def request(self, endpoint: str, *, params: Dict = {}) -> Dict:
+    async def request(
+        self,
+        endpoint: str,
+        *,
+        method: str = "GET",
+        params: Dict = {},
+        json: Dict = {},
+        extra_headers: Dict = {},
+    ) -> Dict:
+
+        headers = dict(self._default_headers, **extra_headers)
+
         await self.check_and_update_ratelimit()
-        async with self.session.get(
-            url=self.BASE_URL + endpoint,
-            headers=self._default_headers,
-            params=params,
+        async with self.session.request(
+            method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
         ) as response:
             await self.check_response_for_errors(response)
             self.requests.append(datetime.utcnow())
