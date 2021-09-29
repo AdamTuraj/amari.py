@@ -188,7 +188,7 @@ class AmariClient:
         """
         lb_type = "weekly" if weekly else "leaderboard"
 
-        data = await self.request(f"guild/raw/{lb_type}/{guild_id}", params={"limit": 0})
+        data = await self.request(f"guild/raw/{lb_type}/{guild_id}")
 
         return Leaderboard(guild_id, data)
 
