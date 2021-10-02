@@ -5,14 +5,14 @@ from typing import Dict, Optional
 
 import aiohttp
 
-from exceptions import (
+from .exceptions import (
     AmariServerError,
     HTTPException,
     InvalidToken,
     NotFound,
     RatelimitException,
 )
-from objects import Leaderboard, Rewards, User, Users
+from .objects import Leaderboard, Rewards, User, Users
 
 __all__ = ("AmariClient",)
 
@@ -25,6 +25,11 @@ class AmariClient:
 
     Attributes
     ----------
+    useAntiRatelimit: bool
+        Whether to use the anti ratelimit or not.
+        IT IS VERY UNRECOMMENDED TO DISABLE THIS FEATURE
+        AS IT CAN LEAD TO RATELIMITS
+
     session: aiohttp.ClientSession
         The client session used to make requests to the Amari API.
     """
@@ -43,12 +48,15 @@ class AmariClient:
         token: str,
         /,
         *,
+        useAntiRatelimit: bool = True,
         session: Optional[aiohttp.ClientSession] = None,
     ):
         self.session = session or aiohttp.ClientSession()
         self._default_headers = {"Authorization": token}
 
         # Anti Ratelimit section
+        self.useAntiRatelimit = useAntiRatelimit
+
         self.requests = []
         self.max_requests = 60
         self.request_period = 60
@@ -236,10 +244,15 @@ class AmariClient:
 
         headers = dict(self._default_headers, **extra_headers)
 
-        await self.check_and_update_ratelimit()
+        if self.useAntiRatelimit:
+            await self.check_and_update_ratelimit()
+
         async with self.session.request(
             method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
         ) as response:
             await self.check_response_for_errors(response)
-            self.requests.append(datetime.utcnow())
+
+            if self.useAntiRatelimit:
+                self.requests.append(datetime.utcnow())
+
             return await response.json()
