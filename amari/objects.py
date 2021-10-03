@@ -66,9 +66,9 @@ class User(_SlotsReprMixin):
         self.user_id: int = int(data["id"])
         self.name: str = data["username"]
         self.exp: int = int(data["exp"])
-        self.level: Optional[int] = int(data.get("level")) if data.get("level") else None
+        self.level: Optional[int] = data.get("level")
         self.weeklyexp: Optional[int] = (
-            int(data.get("weeklyExp")) if data.get("weeklyExp") else None
+            int(data.get("weeklyExp")) if data.get("weeklyExp") is not None else None
         )
         self.position: Optional[int] = position
         self.leaderboard = leaderboard
