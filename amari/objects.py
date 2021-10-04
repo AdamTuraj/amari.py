@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterator, Optional, Tuple
 
-__all__ = ("User", "Leaderboard", "RewardRole", "Rewards")
+__all__ = ("User", "Users", "Leaderboard", "RewardRole", "Rewards")
 
 
 class _SlotsReprMixin:
