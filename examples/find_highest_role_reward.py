@@ -1,3 +1,4 @@
+# Imports a package used to run the asyncronous function. This library is not required for the wrapper.
 import asyncio
 
 # Importing the package
@@ -9,6 +10,10 @@ async def fetch_amari_rewards(guild_id):
     # Initialize the package and
     # Make sure to put your api token here
     amari = AmariClient("authorization_token")
+
+    # Here we are closing the connection. This is required once your done using the client
+    await amari.close()
+
     # Gets the reward and returns it
     # I set the limit to 100 to make sure it will return all of the possible rewards
     return await amari.fetch_rewards(guild_id, limit=100)
@@ -28,4 +33,4 @@ async def get_max_reward(guild_id):
 
 
 # Runs the function using asyncio due to trying to run an async function in a non-async enviroment.
-print(asyncio.run(get_max_reward("your_guild_id")))
+print(asyncio.run(get_max_reward(guild_id)))

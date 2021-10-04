@@ -1,28 +1,32 @@
+# Imports a package used to run the asyncronous function. This library is not required for the wrapper.
 import asyncio
 
 # Importing the package
 from amari import AmariClient
 
-
-# Creating the function to get the user
-async def fetch_amari_user(guild_id, user_id):
+# The function to compare users level
+async def compare_users_level(guild_id, users: list):
     # Initialize the package
     # Make sure to put your api token here
     amari = AmariClient("authorization_token")
-    # Gets the user and returns it
-    return await amari.fetch_user(guild_id, user_id)
 
+    # Fetches the users and sets it to the response users var
+    resp_users = (await amari.fetch_users(guild_id, users)).users
 
-# Function to compare users level
-async def compare_users_level(guild_id, user_a, user_b):
-    # Gets user a
-    amari_user_a = await fetch_amari_user(guild_id, user_a)
-    # Gets user b
-    amari_user_b = await fetch_amari_user(guild_id, user_b)
+    # Here we are closing the connection. This is required once your done using the client
+    await amari.close()
+
+    # Makes sure 2 users are returned
+    if len(resp_users) < 2:
+        return False
+
+    # Changes the dictionary of the users to a list of them
+    users = [user for user in resp_users.values()]
 
     # Returns if their levels are the same
-    return amari_user_a.level == amari_user_b.level
+    return users[0].level == users[1].level
 
 
 # Runs the function using asyncio due to trying to run an async function in a non-async enviroment.
-print(asyncio.run(compare_users_level("your_guild_id", "your_user_a_id", "your_user_b_id")))
+# Make sure to add the user ids as a string
+print(asyncio.run(compare_users_level(guild_id, ["user_a_id", "user_a_id"])))
