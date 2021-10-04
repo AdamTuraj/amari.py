@@ -108,7 +108,7 @@ class AmariClient:
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
 
-    async def fetch_users(self, guild_id: int, user_ids: list):
+    async def fetch_users(self, guild_id: int, user_ids: list) -> Users:
         """
         Fetches multiple users from the Amari API.
 
