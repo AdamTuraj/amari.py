@@ -35,7 +35,7 @@ Comparing Users
 
         # Makes sure 2 users are returned
         if len(resp_users) < 2:
-        return False
+            return False
 
         # Changes the dictionary of the users to a list of them
         users = [user for user in resp_users.values()]
