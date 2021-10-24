@@ -253,7 +253,7 @@ class Rewards:
         self.reward_count: int = int(data["count"])
         self.roles: Dict[int, RewardRole] = {}
         for role_data in data["data"]:
-            role_id = int(role_data["id"])
+            role_id = int(role_data["roleID"])
             self.roles[role_id] = RewardRole(role_id, role_data["level"], self)
 
     def __repr__(self) -> str:
