@@ -115,3 +115,4 @@ dmypy.json
 .pyre/
 
 .DS_Store
+tests/amari_secret
