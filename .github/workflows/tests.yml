@@ -6,9 +6,8 @@ on:
     - cron:  "0 0 * * *"
     
 jobs:
-  build:
-    platform: ubuntu-latest
-    build:
+  tox:
+      platform: ubuntu-latest
       strategy:
         matrix:
           python-version: "3.8"
