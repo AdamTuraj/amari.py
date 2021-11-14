@@ -1,5 +1,6 @@
 from amari import AmariClient
 import pytest
+import os
 
 
 class TestEverything:
@@ -40,5 +41,7 @@ class TestEverything:
         await self.client.close()
 
     def get_token(self):
-        with open(__file__[:-15] + "amari_secret", "r") as secret:
-            return secret.read()
+        try:
+            return os.environ["AMARI_SECRET"]
+        except KeyError:
+            return
