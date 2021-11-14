@@ -8,6 +8,7 @@ class TestEverything:
         try:
             _ = self.client
         except AttributeError:
+            print(self.get_token())
             self.client = AmariClient(self.get_token())
 
     @pytest.mark.asyncio
