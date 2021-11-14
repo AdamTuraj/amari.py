@@ -6,7 +6,7 @@ on:
     - cron:  "0 0 * * *"
     
 jobs:
-  tox:
+  build:
     platform: ubuntu-latest
     build:
       strategy:
