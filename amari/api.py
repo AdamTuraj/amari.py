@@ -250,9 +250,9 @@ class AmariClient:
         async with self.session.request(
             method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
         ) as response:
-            await self.check_response_for_errors(response)
-
             if self.useAntiRatelimit:
                 self.requests.append(datetime.utcnow())
+                
+            await self.check_response_for_errors(response)
 
             return await response.json()
