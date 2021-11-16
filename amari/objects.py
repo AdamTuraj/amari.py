@@ -71,7 +71,7 @@ class User(_SlotsReprMixin):
             int(data.get("weeklyExp")) if data.get("weeklyExp") is not None else None
         )
         self.position: Optional[int] = position
-        self.leaderboard = leaderboard
+        self.leaderboard: Optional[Leaderboard] = leaderboard
 
 
 class Users:
@@ -82,7 +82,7 @@ class Users:
     ----------
     guild_id: int
         The guild ID.
-    users: list
+    users: Dict[int, User]
         The list of users.
     total_members: int
         The amount of users in the list.
@@ -94,7 +94,9 @@ class Users:
 
     def __init__(self, guild_id: int, data: dict):
         self.guild_id: int = guild_id
-        self.users: dict = {int(user["id"]): User(guild_id, user) for user in data["members"]}
+        self.users: Dict[int, User] = {
+            int(user["id"]): User(guild_id, user) for user in data["members"]
+        }
         self.total_members: int = data["total_members"]
         self.queried_members: int = data["queried_members"]
 
@@ -229,7 +231,7 @@ class RewardRole(_SlotsReprMixin):
     def __init__(self, role_id: int, level: int, rewards: Rewards):
         self.role_id: int = role_id
         self.level: int = level
-        self.rewards = rewards
+        self.rewards: Rewards = rewards
 
 
 class Rewards:

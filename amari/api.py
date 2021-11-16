@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
 
@@ -70,9 +70,12 @@ class AmariClient:
         await self.session.close()
 
     def update_ratelimit(self):
-        for request_time in self.requests:
-            if (datetime.utcnow() - request_time).seconds >= self.request_period:
-                self.requests.remove(request_time)
+        try:
+            for request_time in self.requests:
+                if (datetime.utcnow() - request_time).seconds >= self.request_period:
+                    self.requests.remove(request_time)
+        except RuntimeError:
+            self.update_ratelimit()
 
     async def check_and_update_ratelimit(self):
         self.update_ratelimit()
@@ -108,7 +111,7 @@ class AmariClient:
         data = await self.request(f"guild/{guild_id}/member/{user_id}")
         return User(guild_id, data)
 
-    async def fetch_users(self, guild_id: int, user_ids: list) -> Users:
+    async def fetch_users(self, guild_id: int, user_ids: List[int]) -> Users:
         """
         Fetches multiple users from the Amari API.
 
@@ -116,10 +119,12 @@ class AmariClient:
         ----------
         guild_id: int
             The guild ID to fetch the user from.
-        user_ids: list
-            The user IDs. They must be passed as a strings.
+        user_ids: List[int]
+            The IDs of the users you would like to fetch.
         """
-        body = {"members": user_ids}
+        converted_user_ids = [str(user_id) for user_id in user_ids]
+
+        body = {"members": converted_user_ids}
         data = await self.request(
             f"guild/{guild_id}/members",
             method="POST",
@@ -252,7 +257,7 @@ class AmariClient:
         ) as response:
             if self.useAntiRatelimit:
                 self.requests.append(datetime.utcnow())
-                
+
             await self.check_response_for_errors(response)
 
             return await response.json()
