@@ -70,12 +70,9 @@ class AmariClient:
         await self.session.close()
 
     def update_ratelimit(self):
-        try:
-            for request_time in self.requests:
-                if (datetime.utcnow() - request_time).seconds >= self.request_period:
-                    self.requests.remove(request_time)
-        except RuntimeError:
-            self.update_ratelimit()
+        for request_time in self.requests.copy():
+            if (datetime.utcnow() - request_time).seconds >= self.request_period:
+                self.requests.remove(request_time)
 
     async def check_and_update_ratelimit(self):
         self.update_ratelimit()
