@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+import time
 from typing import Dict, List, Optional
 
 import aiohttp
@@ -48,17 +48,21 @@ class AmariClient:
         token: str,
         /,
         *,
-        useAntiRatelimit: bool = True,
+        useantiratelimit: bool = True,
         session: Optional[aiohttp.ClientSession] = None,
     ):
         self.session = session or aiohttp.ClientSession()
         self._default_headers = {"Authorization": token}
 
-        # Anti Ratelimit section
-        self.useAntiRatelimit = useAntiRatelimit
+        self.lock = asyncio.Lock()
 
-        self.requests = []
-        self.max_requests = 60
+        # Anti Ratelimit section
+        self.useantiratelimit = useantiratelimit
+
+        self.requests = 0
+        self.last_reset = time.time()
+
+        self.max_requests = 55
         self.request_period = 60
 
     async def close(self):
@@ -69,16 +73,15 @@ class AmariClient:
         """
         await self.session.close()
 
-    def update_ratelimit(self):
-        for request_time in self.requests.copy():
-            if (datetime.utcnow() - request_time).seconds >= self.request_period:
-                self.requests.remove(request_time)
+    async def check_ratelimit(self):
+        async with self.lock:
+            elapsed = self.last_reset - time.time()
 
-    async def check_and_update_ratelimit(self):
-        self.update_ratelimit()
+            if elapsed >= self.request_period:
+                self.requests = 0
 
-        if len(self.requests) == self.max_requests - 1:
-            await self.wait_for_ratelimit_end()
+            if self.requests >= self.max_requests - 1:
+                await self.wait_for_ratelimit_end()
 
     async def wait_for_ratelimit_end(self):
         for count in range(1, 6):
@@ -90,8 +93,7 @@ class AmariClient:
             )
             await asyncio.sleep(wait_amount)
 
-            self.update_ratelimit()
-            if len(self.requests) != self.max_requests - 1:
+            if self.requests != self.max_requests - 1:
                 break
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
@@ -246,14 +248,14 @@ class AmariClient:
 
         headers = dict(self._default_headers, **extra_headers)
 
-        if self.useAntiRatelimit:
-            await self.check_and_update_ratelimit()
+        if self.useantiratelimit:
+            await self.check_ratelimit()
 
         async with self.session.request(
             method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
         ) as response:
-            if self.useAntiRatelimit:
-                self.requests.append(datetime.utcnow())
+            if self.useantiratelimit:
+                self.requests += 1
 
             await self.check_response_for_errors(response)
 
