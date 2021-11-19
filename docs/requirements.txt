@@ -1,4 +1,3 @@
-aiohttp
 readthedocs-sphinx-search
 sphinx
 sphinx_rtd_theme
