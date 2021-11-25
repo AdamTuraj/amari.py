@@ -6,6 +6,12 @@ User
 
 .. autoclass:: amari.objects.User
     :members:
+    
+Users
+----
+
+.. autoclass:: amari.objects.Users
+    :members:
 
 Leaderboard
 -----------
