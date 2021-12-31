@@ -21,7 +21,7 @@ async def compare_users_level(guild_id, users: list):
         return False
 
     # Changes the dictionary of the users to a list of them
-    users = [user for user in resp_users.values()]
+    users = list(resp_users.values())
 
     # Returns if their levels are the same
     return users[0].level == users[1].level
