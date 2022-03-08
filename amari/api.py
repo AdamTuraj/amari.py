@@ -5,14 +5,14 @@ from typing import Dict, List, Optional
 
 import aiohttp
 
-from .exceptions import (
+from exceptions import (
     AmariServerError,
     HTTPException,
     InvalidToken,
     NotFound,
     RatelimitException,
 )
-from .objects import Leaderboard, Rewards, User, Users
+from objects import Leaderboard, Rewards, User, Users
 
 __all__ = ("AmariClient",)
 
@@ -57,10 +57,9 @@ class AmariClient:
         self.lock = asyncio.Lock()
 
         # Anti Ratelimit section
-        self.useantiratelimit = useantiratelimit
+        self.use_anti_ratelimit = useantiratelimit
 
-        self.requests = 0
-        self.last_reset = time.time()
+        self.requests = []
 
         self.max_requests = 55
         self.request_period = 60
@@ -75,26 +74,18 @@ class AmariClient:
 
     async def check_ratelimit(self):
         async with self.lock:
-            elapsed = self.last_reset - time.time()
-
-            if elapsed >= self.request_period:
-                self.requests = 0
-
-            if self.requests >= self.max_requests - 1:
-                await self.wait_for_ratelimit_end()
+            while len(self.requests) >= self.max_requests:
+                self.requests = [request for request in self.requests if time.time() - request < self.request_period]
+                    
+                if len(self.requests) >= self.max_requests:
+                    await self.wait_for_ratelimit_end()
 
     async def wait_for_ratelimit_end(self):
-        for count in range(1, 6):
-            wait_amount = 2 ** count
-
-            logger.warning(
-                "Slow down, you are about to be rate limited. "
-                f"Trying again in {wait_amount} seconds."
-            )
-            await asyncio.sleep(wait_amount)
-
-            if self.requests != self.max_requests - 1:
-                break
+        wait_amount = self.request_period - (time.time() - min(self.requests))
+        logger.warning(f"You are about to be ratelimited! Waiting {round(wait_amount)} seconds.")
+        
+        await asyncio.sleep(wait_amount)
+        
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
         """
@@ -248,14 +239,14 @@ class AmariClient:
 
         headers = dict(self._default_headers, **extra_headers)
 
-        if self.useantiratelimit:
+        if self.use_anti_ratelimit:
             await self.check_ratelimit()
 
         async with self.session.request(
             method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
         ) as response:
-            if self.useantiratelimit:
-                self.requests += 1
+            if self.use_anti_ratelimit:
+                self.requests.append(time.time())
 
             await self.check_response_for_errors(response)
 
