@@ -5,16 +5,16 @@ from typing import Dict, List, Optional
 
 import aiohttp
 
-from exceptions import (
+from .exceptions import (
     AmariServerError,
     HTTPException,
     InvalidToken,
     NotFound,
     RatelimitException,
 )
-from objects import Leaderboard, Rewards, User, Users
+from .objects import Leaderboard, Rewards, User, Users
 
-__all__ = ("AmariClient",)
+__all__ = ("AmariClient")
 
 logger = logging.getLogger(__name__)
 
