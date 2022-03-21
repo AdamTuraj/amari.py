@@ -14,7 +14,7 @@ from .exceptions import (
 )
 from .objects import Leaderboard, Rewards, User, Users
 
-__all__ = ("AmariClient")
+__all__ = ("AmariClient",)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class AmariClient:
         token: str,
         /,
         *,
-        useantiratelimit: bool = True,
+        useAntirateLimit: bool = True,
         session: Optional[aiohttp.ClientSession] = None,
     ):
         self.session = session or aiohttp.ClientSession()
@@ -57,7 +57,7 @@ class AmariClient:
         self.lock = asyncio.Lock()
 
         # Anti Ratelimit section
-        self.use_anti_ratelimit = useantiratelimit
+        self.use_anti_ratelimit = useAntirateLimit
 
         self.requests = []
 
@@ -75,17 +75,20 @@ class AmariClient:
     async def check_ratelimit(self):
         async with self.lock:
             while len(self.requests) >= self.max_requests:
-                self.requests = [request for request in self.requests if time.time() - request < self.request_period]
-                    
+                self.requests = [
+                    request
+                    for request in self.requests
+                    if time.time() - request < self.request_period
+                ]
+
                 if len(self.requests) >= self.max_requests:
                     await self.wait_for_ratelimit_end()
 
     async def wait_for_ratelimit_end(self):
         wait_amount = self.request_period - (time.time() - min(self.requests))
         logger.warning(f"You are about to be ratelimited! Waiting {round(wait_amount)} seconds.")
-        
+
         await asyncio.sleep(wait_amount)
-        
 
     async def fetch_user(self, guild_id: int, user_id: int) -> User:
         """
