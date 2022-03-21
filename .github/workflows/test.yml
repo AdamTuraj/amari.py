@@ -27,6 +27,6 @@ jobs:
 
       - name: Run test
         env:
-          TOKEN: ${{ secrets.AMARI_TOKEN }}
+          AMARI_TOKEN: ${{ secrets.AMARI_TOKEN }}
         run: |
           pytest
