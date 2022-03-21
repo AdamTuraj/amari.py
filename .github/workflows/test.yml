@@ -26,5 +26,7 @@ jobs:
           pip install pytest pytest-asyncio .
 
       - name: Run test
+        env:
+          TOKEN: ${{ secrets.AMARI_TOKEN }}
         run: |
           pytest
