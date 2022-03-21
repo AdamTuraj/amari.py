@@ -3,7 +3,7 @@ import pytest
 
 import os
 
-TOKEN = os.getenv("AMARI_TOKEN")
+TOKEN = os.environ["AMARI_TOKEN"]
 
 
 @pytest.mark.asyncio
