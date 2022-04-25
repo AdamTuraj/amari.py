@@ -10,7 +10,7 @@ class _SlotsReprMixin:
 
     def __repr__(self) -> str:
         inner = ", ".join(
-            (f"{k}={v!r}" for k, v in self.get_slotted_items() if v and not k.startswith("_"))
+            (f"{k}={v!r}" for k, v in self.get_slotted_items() if v is not None and not k.startswith("_"))
         )
         return f"{self.__class__.__name__}({inner})"
 
