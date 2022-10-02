@@ -1,9 +1,8 @@
 name: Test package
 
 on:
-  push:
   pull_request:
-    types: [opened, synchronize]
+    types: [open,synchronize]
 
 jobs:
   tests:
