@@ -26,7 +26,7 @@ class Cache:
         Maximum total size of cached data in bytes.
     """
 
-    def __init__(self, ttl: int, maxbytes: int = 250 * 1024 * 1024):  # 250 MiB
+    def __init__(self, ttl: int, maxbytes: int = 25 * 1024 * 1024):  # 25 MiB
         self.ttl = ttl
         self.maxbytes = maxbytes
         self.cache: OrderedDict[Tuple, CacheEntry] = OrderedDict()
@@ -35,6 +35,7 @@ class Cache:
 
     async def get(self, key: Tuple) -> Optional[Any]:
         async with self.lock:
+            self._remove_expired_entries()
             entry = self.cache.get(key)
             if entry:
                 if time.time() - entry.timestamp < self.ttl:
@@ -51,12 +52,23 @@ class Cache:
             self.cache[key] = entry
             self.cache.move_to_end(key)
             self.total_size += size
+            self._remove_expired_entries()
             await self._enforce_size_limit()
 
     def _remove_entry(self, key: Tuple):
         entry = self.cache.pop(key, None)
         if entry:
             self.total_size -= entry.size
+
+    def _remove_expired_entries(self):
+        current_time = time.time()
+        keys_to_remove = [
+            key
+            for key, entry in self.cache.items()
+            if current_time - entry.timestamp >= self.ttl
+        ]
+        for key in keys_to_remove:
+            self._remove_entry(key)
 
     async def _enforce_size_limit(self):
         while self.total_size > self.maxbytes:

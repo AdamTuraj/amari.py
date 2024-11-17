@@ -65,7 +65,7 @@ class AmariClient:
         session: Optional[aiohttp.ClientSession] = None,
         max_requests: int = 55,
         cache_ttl: int = 60,
-        maxbytes: int = 250 * 1024 * 1024,  # 250 MiB
+        maxbytes: int = 25 * 1024 * 1024,  # 25 MiB
     ):
         self.session = session or aiohttp.ClientSession()
         self._default_headers = {"Authorization": token}
@@ -80,6 +80,12 @@ class AmariClient:
         self.max_requests = max_requests
         self.request_period = 60
         self.cache = Cache(ttl=cache_ttl, maxbytes=maxbytes)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc) -> None:
+        await self.close()
 
     async def close(self):
         """

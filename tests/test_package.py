@@ -12,7 +12,7 @@ async def test_users():
     client = Amari(TOKEN)
 
     try:
-        assert await client.fetch_user(346474194394939393, 374147012599218176)
+        assert await client.fetch_user(346474194394939393, 374147012599218176, cache=True)
         assert await client.fetch_users(
             346474194394939393, ["374147012599218176", "107510319315697664"]
         )
