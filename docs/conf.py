@@ -19,9 +19,9 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-project = "Amari.py"
-copyright = "2021, TheF1ng3r"
-author = "TheF1ng3r"
+project = "Amaripy"
+copyright = "2024, RayyanW786"
+author = "RayyanW786"
 
 # The full version, including alpha/beta/rc tags
 release = amari.__version__

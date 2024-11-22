@@ -1,4 +1,4 @@
-Welcome to Amari.py's documentation!
+Welcome to Amaripy's documentation!
 ====================================
 
 Installation
@@ -6,9 +6,9 @@ Installation
 
 .. code:: sh
 
-   pip install amari.py
+   pip install amaripy
 
-   python -m pip install amari.py
+   python -m pip install amaripy
 
 Support
 -------
