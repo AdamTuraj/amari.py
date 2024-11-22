@@ -144,6 +144,7 @@ class Users:
             The object of users the user was added to, for fluent class chaining.
         """
         self.users[user.user_id] = user
+        return self
 
 
 class Leaderboard:
@@ -213,7 +214,7 @@ class Leaderboard:
             The leaderboard the user was added to, for fluent class chaining.
         """
         self.users[user.user_id] = user
-        return Leaderboard
+        return self
 
 
 class RewardRole(_SlotsReprMixin):
