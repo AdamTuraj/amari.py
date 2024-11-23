@@ -1,15 +1,15 @@
 Amaripy
 ========
 
-.. image:: https://readthedocs.org/projects/amaripy/badge/?version=latest
+.. image:: https://readthedocs.org/projects/amari-api.py/badge/?version=latest
    :target: https://amaripy.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://img.shields.io/pypi/v/amaripy.svg
+.. image:: https://img.shields.io/pypi/v/amari-api.py.svg
    :target: https://pypi.org/project/amaripy/
    :alt: PyPi Library version
 
-.. image:: https://img.shields.io/pypi/pyversions/amaripy.svg
+.. image:: https://img.shields.io/pypi/pyversions/amari-api.py.svg
    :target: https://pypi.org/project/amaripy/
    :alt: PyPi library Python versions
 

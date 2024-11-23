@@ -4,8 +4,8 @@ Quickstart Guide
 Requirements
 ------------
 
-- The library installed. Instructions to install shown at the `index menu <https://amaripy.readthedocs.io/en/latest/>`_
-- An Amari API authorization token. Instructions to obtain shown at the `getting an authorization token page <https://amaripy.readthedocs.io/en/latest/getting_an_authorization_token>`_
+- The library installed. Instructions to install shown at the `index menu <https://amari-py.readthedocs.io/en/latest/>`_
+- An Amari API authorization token. Instructions to obtain shown at the `getting an authorization token page <https://amari-py.readthedocs.io/en/latest/getting_an_authorization_token>`_
 
 Example
 -------

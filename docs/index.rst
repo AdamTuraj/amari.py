@@ -6,9 +6,9 @@ Installation
 
 .. code:: sh
 
-   pip install amaripy
+   pip install amari-api.py
 
-   python -m pip install amaripy
+   python -m pip install amari-api.py
 
 Support
 -------
