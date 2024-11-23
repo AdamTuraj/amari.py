@@ -29,6 +29,7 @@ If you have questions or require support please contact me in the `Amaribot supp
    amariclient
    objects
    exceptions
+   cache
 
 .. toctree::
    :maxdepth: 2

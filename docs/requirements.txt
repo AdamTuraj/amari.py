@@ -1,4 +1,4 @@
 readthedocs-sphinx-search
 sphinx
 sphinx_rtd_theme
-amaripy
+amari-api.py
