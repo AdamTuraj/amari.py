@@ -1,15 +1,15 @@
 Amari.py
 ========
 
-.. image:: https://readthedocs.org/projects/amari-api.py/badge/?version=latest
+.. image:: https://readthedocs.org/projects/amari.py/badge/?version=latest
    :target: https://amaripy.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://img.shields.io/pypi/v/amari-api.py.svg
+.. image:: https://img.shields.io/pypi/v/amari.py.svg
    :target: https://pypi.org/project/amaripy/
    :alt: PyPi Library version
 
-.. image:: https://img.shields.io/pypi/pyversions/amari-api.py.svg
+.. image:: https://img.shields.io/pypi/pyversions/amari.py.svg
    :target: https://pypi.org/project/amaripy/
    :alt: PyPi library Python versions
 
@@ -22,9 +22,9 @@ Enter any of these commands to install the library:
 
 .. code:: sh
 
-  pip install amari-api.py
+  pip install amari.py
 
-  python -m pip install amari-api.py
+  python -m pip install amari.py
 
 Key features
 ------------

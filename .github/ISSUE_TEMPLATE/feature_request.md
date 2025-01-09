@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for amaripy
+about: Suggest an idea for amari.py
 title: "[FEATURE]"
 labels: 'enhancement'
 assignees: ''
