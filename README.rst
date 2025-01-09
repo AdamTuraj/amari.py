@@ -1,4 +1,4 @@
-Amaripy
+Amari.py
 ========
 
 .. image:: https://readthedocs.org/projects/amari-api.py/badge/?version=latest
@@ -13,7 +13,7 @@ Amaripy
    :target: https://pypi.org/project/amaripy/
    :alt: PyPi library Python versions
 
-Amaripy is an async, easy to use API wrapper for the AmariBot and a fork of amari.py.
+Amari.py is an async, easy to use API wrapper for the AmariBot.
 
 Installation
 ------------
@@ -41,9 +41,9 @@ If you have any questions or require support with the API wrapper, visit the `Am
 Bugs
 ----
 
-If you find any bugs with the library, you can report it by creating a bug issue at `Amaripy's Github repo <https://github.com/RayyanW786/amaripy>`_.
+If you find any bugs with the library, you can report it by creating a bug issue at `Amari.py's Github repo <https://github.com/RayyanW786/amaripy>`_.
 
 Docs
 ----
 
-Visit the `Amaripy docs <https://amari-py.readthedocs.io/en/latest/>`_ for usage of the library.
+Visit the `Amari.py docs <https://amaripy.readthedocs.io/en/latest/>`_ for usage of the library.

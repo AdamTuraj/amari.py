@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-project = "Amaripy"
+project = "Amari.py"
 copyright = "2024, RayyanW786"
 author = "RayyanW786"
 

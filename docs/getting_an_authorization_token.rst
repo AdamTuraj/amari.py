@@ -13,4 +13,4 @@ Now hover over your profile picture seen in that corner, and click developer por
 .. image:: https://i.imgur.com/oRPuAmi.png
    :alt: The AmariBot developer portal.
 
-Now head over to the `quickstart <https://amari-py.readthedocs.io/en/latest/quickstart.html>`_ section to get started!
+Now head over to the `quickstart <https://amaripy.readthedocs.io/en/latest/quickstart.html>`_ section to get started!

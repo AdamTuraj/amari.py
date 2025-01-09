@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve amaripy
+about: Create a report to help us improve amari.py
 title: "[BUG]"
 labels: 'bug'
 assignees: ''
