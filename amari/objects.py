@@ -10,7 +10,11 @@ class _SlotsReprMixin:
 
     def __repr__(self) -> str:
         inner = ", ".join(
-            (f"{k}={v!r}" for k, v in self.get_slotted_items() if v is not None and not k.startswith("_"))
+            (
+                f"{k}={v!r}"
+                for k, v in self.get_slotted_items()
+                if v is not None and not k.startswith("_")
+            )
         )
         return f"{self.__class__.__name__}({inner})"
 
@@ -140,6 +144,7 @@ class Users:
             The object of users the user was added to, for fluent class chaining.
         """
         self.users[user.user_id] = user
+        return self
 
 
 class Leaderboard:
@@ -209,7 +214,7 @@ class Leaderboard:
             The leaderboard the user was added to, for fluent class chaining.
         """
         self.users[user.user_id] = user
-        return Leaderboard
+        return self
 
 
 class RewardRole(_SlotsReprMixin):

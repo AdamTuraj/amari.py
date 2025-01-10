@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 import aiohttp
 
+from .cache import Cache
 from .exceptions import (
     AmariServerError,
     HTTPException,
@@ -32,6 +33,18 @@ class AmariClient:
 
     session: aiohttp.ClientSession
         The client session used to make requests to the Amari API.
+
+    max_requests: int
+        The number of requests that can be made per second
+
+    cache_ttl: int
+        The time to live for cache entries, in seconds.
+
+    cache: Cache
+        The cache instance used to store API responses.
+
+    maxbytes: int
+        The maximum total size of cached data in bytes.
     """
 
     BASE_URL = "https://amaribot.com/api/v1/"
@@ -50,6 +63,9 @@ class AmariClient:
         *,
         useAntirateLimit: bool = True,
         session: Optional[aiohttp.ClientSession] = None,
+        max_requests: int = 55,
+        cache_ttl: int = 60,
+        maxbytes: int = 25 * 1024 * 1024,  # 25 MiB
     ):
         self.session = session or aiohttp.ClientSession()
         self._default_headers = {"Authorization": token}
@@ -61,8 +77,15 @@ class AmariClient:
 
         self.requests = []
 
-        self.max_requests = 55
+        self.max_requests = max_requests
         self.request_period = 60
+        self.cache = Cache(ttl=cache_ttl, maxbytes=maxbytes)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc) -> None:
+        await self.close()
 
     async def close(self):
         """
@@ -86,11 +109,15 @@ class AmariClient:
 
     async def wait_for_ratelimit_end(self):
         wait_amount = self.request_period - (time.time() - min(self.requests))
-        logger.warning(f"You are about to be ratelimited! Waiting {round(wait_amount)} seconds.")
+        logger.warning(
+            f"You are about to be ratelimited! Waiting {round(wait_amount)} seconds."
+        )
 
         await asyncio.sleep(wait_amount)
 
-    async def fetch_user(self, guild_id: int, user_id: int) -> User:
+    async def fetch_user(
+        self, guild_id: int, user_id: int, cache: bool = False
+    ) -> User:
         """
         Fetches a user from the Amari API.
 
@@ -100,32 +127,90 @@ class AmariClient:
             The guild ID to fetch the user from.
         user_id: int
             The user's ID.
-        """
-        data = await self.request(f"guild/{guild_id}/member/{user_id}")
-        return User(guild_id, data)
+        cache: bool
+            Whether to use caching for this request.
 
-    async def fetch_users(self, guild_id: int, user_ids: List[int]) -> Users:
+        Returns
+        -------
+        User
+            The user object.
+        """
+        if cache:
+            key = ("fetch_user", guild_id, user_id)
+            data = await self.cache.get(key)
+            if data:
+                return User(guild_id, data)
+            else:
+                data = await self.request(f"guild/{guild_id}/member/{user_id}")
+                await self.cache.set(key, data)
+                return User(guild_id, data)
+        else:
+            data = await self.request(f"guild/{guild_id}/member/{user_id}")
+            return User(guild_id, data)
+
+    async def fetch_users(
+        self, guild_id: int, user_ids: List[int], cache: bool = False
+    ) -> Users:
         """
         Fetches multiple users from the Amari API.
 
         Parameters
         ----------
         guild_id: int
-            The guild ID to fetch the user from.
+            The guild ID to fetch the users from.
         user_ids: List[int]
             The IDs of the users you would like to fetch.
+        cache: bool
+            Whether to use caching for this request.
+
+        Returns
+        -------
+        Users
+            The users object containing the fetched users.
         """
-        converted_user_ids = [str(user_id) for user_id in user_ids]
+        if cache:
+            members = []
+            uncached_user_ids = []
 
-        body = {"members": converted_user_ids}
-        data = await self.request(
-            f"guild/{guild_id}/members",
-            method="POST",
-            extra_headers={"Content-Type": "application/json"},
-            json=body,
-        )
+            for user_id in user_ids:
+                key = ("fetch_user", guild_id, user_id)
+                data = await self.cache.get(key)
+                if data:
+                    members.append(data)
+                else:
+                    uncached_user_ids.append(user_id)
 
-        return Users(guild_id, data)
+            if uncached_user_ids:
+                converted_user_ids = [str(user_id) for user_id in uncached_user_ids]
+                body = {"members": converted_user_ids}
+                fetched_data = await self.request(
+                    f"guild/{guild_id}/members",
+                    method="POST",
+                    extra_headers={"Content-Type": "application/json"},
+                    json=body,
+                )
+                for user_data in fetched_data["members"]:
+                    user_id = int(user_data["id"])
+                    key = ("fetch_user", guild_id, user_id)
+                    await self.cache.set(key, user_data)
+                    members.append(user_data)
+
+            data = {
+                "members": members,
+                "total_members": len(members),
+                "queried_members": len(user_ids),
+            }
+            return Users(guild_id, data)
+        else:
+            converted_user_ids = [str(user_id) for user_id in user_ids]
+            body = {"members": converted_user_ids}
+            data = await self.request(
+                f"guild/{guild_id}/members",
+                method="POST",
+                extra_headers={"Content-Type": "application/json"},
+                json=body,
+            )
+            return Users(guild_id, data)
 
     async def fetch_leaderboard(
         self,
@@ -136,6 +221,7 @@ class AmariClient:
         raw: bool = False,
         page: Optional[int] = None,
         limit: Optional[int] = None,
+        cache: bool = False,
     ) -> Leaderboard:
         """
         Fetches a guild's leaderboard from the Amari API.
@@ -153,15 +239,22 @@ class AmariClient:
             The leaderboard page to fetch.
         limit: int
             The amount of users to fetch per page.
+        cache: bool
+            Whether to use caching for this request.
 
         Returns
         -------
         Leaderboard
             The guild's leaderboard.
         """
-        params = {}
+        if cache:
+            key = ("fetch_leaderboard", guild_id, weekly, raw, page, limit)
+            data = await self.cache.get(key)
+            if data:
+                return Leaderboard(guild_id, data)
         if raw and page:
             raise ValueError("raw endpoints do not support pagination")
+        params = {}
         if page is not None:
             params["page"] = page
         if limit is not None:
@@ -172,10 +265,12 @@ class AmariClient:
             endpoint.insert(1, "raw")
 
         data = await self.request("/".join(endpoint), params=params)
+        if cache:
+            await self.cache.set(key, data)
         return Leaderboard(guild_id, data)
 
     async def fetch_full_leaderboard(
-        self, guild_id: int, /, *, weekly: bool = False
+        self, guild_id: int, /, *, weekly: bool = False, cache: bool = False
     ) -> Leaderboard:
         """
         Fetches a guild's full leaderboard from the Amari API.
@@ -186,19 +281,28 @@ class AmariClient:
             The guild ID to fetch the leaderboard from.
         weekly: bool
             Choose either to fetch the weekly leaderboard or the regular leaderboard.
+        cache: bool
+            Whether to use caching for this request.
 
         Returns
         -------
         Leaderboard
             The guild's leaderboard.
         """
+        if cache:
+            key = ("fetch_full_leaderboard", guild_id, weekly)
+            data = await self.cache.get(key)
+            if data:
+                return Leaderboard(guild_id, data)
         lb_type = "weekly" if weekly else "leaderboard"
-
         data = await self.request(f"guild/raw/{lb_type}/{guild_id}")
-
+        if cache:
+            await self.cache.set(key, data)
         return Leaderboard(guild_id, data)
 
-    async def fetch_rewards(self, guild_id: int, /, *, page: int = 1, limit: int = 50) -> Rewards:
+    async def fetch_rewards(
+        self, guild_id: int, /, *, page: int = 1, limit: int = 50, cache: bool = False
+    ) -> Rewards:
         """
         Fetches a guild's role rewards from the Amari API.
 
@@ -210,14 +314,23 @@ class AmariClient:
             The rewards page to fetch.
         limit: int
             The amount of rewards to fetch per page.
+        cache: bool
+            Whether to use caching for this request.
 
         Returns
         -------
         Rewards
             The guild's role rewards.
         """
+        if cache:
+            key = ("fetch_rewards", guild_id, page, limit)
+            data = await self.cache.get(key)
+            if data:
+                return Rewards(guild_id, data)
         params = {"page": page, "limit": limit}
         data = await self.request(f"guild/rewards/{guild_id}", params=params)
+        if cache:
+            await self.cache.set(key, data)
         return Rewards(guild_id, data)
 
     @classmethod
@@ -239,14 +352,17 @@ class AmariClient:
         json: Dict = {},
         extra_headers: Dict = {},
     ) -> Dict:
-
         headers = dict(self._default_headers, **extra_headers)
 
         if self.use_anti_ratelimit:
             await self.check_ratelimit()
 
         async with self.session.request(
-            method=method, url=self.BASE_URL + endpoint, json=json, headers=headers, params=params
+            method=method,
+            url=self.BASE_URL + endpoint,
+            json=json,
+            headers=headers,
+            params=params,
         ) as response:
             if self.use_anti_ratelimit:
                 self.requests.append(time.time())

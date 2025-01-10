@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "Amari.py"
-copyright = "2021, TheF1ng3r"
-author = "TheF1ng3r"
+copyright = "2024, RayyanW786"
+author = "RayyanW786"
 
 # The full version, including alpha/beta/rc tags
 release = amari.__version__
@@ -33,7 +33,6 @@ release = amari.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "recommonmark",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",

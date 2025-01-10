@@ -1,8 +1,8 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: "[SUGGESTION]"
-labels: ''
+about: Suggest an idea for amari.py
+title: "[FEATURE]"
+labels: 'enhancement'
 assignees: ''
 
 ---

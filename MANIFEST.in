@@ -1,3 +1,3 @@
-recursive-include amari *.py
+recursive-include amari.py *.py
 include README.rst
 include LICENSE
