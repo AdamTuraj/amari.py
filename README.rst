@@ -1,7 +1,7 @@
 Amari.py
 ========
 
-.. image:: https://readthedocs.org/projects/amari.py/badge/?version=latest
+.. image:: https://readthedocs.org/projects/amaripy/badge/?version=latest
    :target: https://amaripy.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
